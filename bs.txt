@@ -1,0 +1,10 @@
+set term dumb
+set autoscale
+set grid
+set xtic auto
+set ytic auto
+set title "mga graphs"
+set xlabel "pixel"
+set ylabel "intensity"
+plot "finalresults.txt" using 1:1 title 'data' w lines 
+#change column numbers right here^ depending on which code
