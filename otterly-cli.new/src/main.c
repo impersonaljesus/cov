@@ -93,13 +93,16 @@ int main(int argc, char *argv[])
 {
 
 	/* added by JF for unique Filenames"*/
-    char fnbuffer[100];
+    char dataFileNameBuffer[100];
+    char graphFileNameBuffer[100];
     struct tm *timenow;
 
     time_t now = time(NULL);
     timenow = gmtime(&now);
 
-    strftime(fnbuffer, sizeof(fnbuffer), "output_%Y-%m-%d_%H:%M:%S.dat", timenow);
+    strftime(dataFileNameBuffer, sizeof(dataFileNameBuffer), "resultsFromTestAt_%Y-%m-%d_%H:%M:%S.dat", timenow);
+    strftime(graphFileNameBuffer, sizeof(graphFileNameBuffer), "resultsFromTestAt_%Y-%m-%d_%H:%M:%S.dat", timenow);
+    
 	/* end this section*/
 
 	GMainLoop *loop = g_main_loop_new (NULL, FALSE);
@@ -109,7 +112,7 @@ int main(int argc, char *argv[])
 	arguments.sh_period = 20000;
 	arguments.icg_period = 1000000;
 	arguments.avg_exps = 10;
-	arguments.output_file = fnbuffer;
+	arguments.output_file = dataFileNameBuffer; // timestampped filename
 	arguments.input_tty = "ttyACM0";
 	arguments.plot = 1;
 
@@ -160,9 +163,9 @@ int main(int argc, char *argv[])
 	/* Close output-file */
 	fclose(fp);
 	
-	system("./datacleaner");
+	system("./datacleaner"); //calls app to clean and invert
 	
-	FILE *cleanData = fopen("lf/finalresults.txt", "r");
+	FILE *cleanData = fopen("lf/finalresults.txt", "r"); //imports clean data
 	double finalData[CCDSize];
 	
 	for (i = 0; i < CCDSize; i++)
@@ -173,6 +176,8 @@ int main(int argc, char *argv[])
 		//}
 	}
 	fclose(cleanData);
+	
+	//system("mkdir -p graphs");
 
 	
 
@@ -192,15 +197,35 @@ int main(int argc, char *argv[])
 		gnuplot_ctrl *gh;
 	    gh = gnuplot_init();
 
-		/* setup gnuplot-x11 */
+		/* setup gnuplot-dumb */
 		gnuplot_cmd(gh, "set term dumb");
-		gnuplot_setstyle(gh, "lines");
-		gnuplot_set_xlabel(gh, "pixelnumber") ;
+		//gnuplot_setstyle(gh, "lines");
+		gnuplot_set_xlabel(gh, "Wavelength") ;
 	    gnuplot_set_ylabel(gh, "Intensity") ;
 		gnuplot_plot_x(gh, finalData, CCDSize, "Covad");
 	
 		/* close gnuplot handle */
 		gnuplot_close(gh);
+		
+		/*second handle for png output*/
+		/* open gnuplot handle */
+		gnuplot_ctrl *gh2;
+	    gh2 = gnuplot_init();
+
+		/* setup gnuplot-PNG */
+		gnuplot_cmd(gh2, "set term pngcairo");
+		gnuplot_cmd(gh2, "set output strftime(\"graph_%Y-%b-%d%d_%H:%M.png\", time(NULL))");
+		gnuplot_setstyle(gh2, "lines");
+		gnuplot_set_xlabel(gh2, "Wavelength") ;
+	    gnuplot_set_ylabel(gh2, "Intensity") ;
+	    gnuplot_cmd(gh2, "set autoscale");
+	    gnuplot_cmd(gh2, "set grid");
+	    gnuplot_cmd(gh2, "set xtic auto");
+	    gnuplot_cmd(gh2, "set ytic auto");
+		gnuplot_plot_x(gh2, finalData, CCDSize, "Covad");
+	
+		/* close gnuplot handle */
+		gnuplot_close(gh2);
 	}
 
 	return 0;
