@@ -31,6 +31,7 @@
 
 
 #include "main.h"
+#include <time.h>
 
 /**** Stuff for the command line options ****/
 const char *argp_program_version = "Otterly TCD1304 CLI 0.2";
@@ -85,8 +86,22 @@ double data[CCDSize];
 
 
 
+
+
+
 int main(int argc, char *argv[])
 {
+
+	/* added by JF for unique Filenames"*/
+    char fnbuffer[100];
+    struct tm *timenow;
+
+    time_t now = time(NULL);
+    timenow = gmtime(&now);
+
+    strftime(fnbuffer, sizeof(fnbuffer), "output_%Y-%m-%d_%H:%M:%S.dat", timenow);
+	/* end this section*/
+
 	GMainLoop *loop = g_main_loop_new (NULL, FALSE);
 	struct arguments arguments;
 
@@ -94,7 +109,7 @@ int main(int argc, char *argv[])
 	arguments.sh_period = 20000;
 	arguments.icg_period = 1000000;
 	arguments.avg_exps = 10;
-	arguments.output_file = "output.dat";
+	arguments.output_file = fnbuffer;
 	arguments.input_tty = "ttyACM0";
 	arguments.plot = 1;
 
